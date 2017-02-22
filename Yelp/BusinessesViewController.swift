@@ -8,9 +8,10 @@
 
 import UIKit
 
-class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class BusinessesViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate {
     
     var businesses: [Business]!
+    var output: [Business]!
     
     @IBOutlet weak var tableView: UITableView!
     
@@ -22,13 +23,27 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         tableView.dataSource = self
         tableView.estimatedRowHeight = 120
         tableView.rowHeight = UITableViewAutomaticDimension
+        
+        let searchBar = UISearchBar()
+        searchBar.delegate = self as? UISearchBarDelegate
+        searchBar.sizeToFit()
+        navigationItem.titleView = searchBar
+        //tableView.reloadData()
+        //searchBar.delegate = self
+        let refreshControl = UIRefreshControl()
+        refreshControl.addTarget(self, action: #selector(refreshBusinesses(_:)), for: UIControlEvents.valueChanged)
+        tableView.insertSubview(refreshControl, at: 0)
+        refreshBusinesses(refreshControl)
+        //searchBar.delegate = self;
+    }
     
-        
-        
+    func refreshBusinesses(_ refreshControl: UIRefreshControl) {
         Business.searchWithTerm(term: "Thai", completion: { (businesses: [Business]?, error: Error?) -> Void in
             
             self.businesses = businesses
+            self.output = businesses
             self.tableView.reloadData()
+            refreshControl.endRefreshing()
             if let businesses = businesses {
                 for business in businesses {
                     print(business.name!)
@@ -36,8 +51,11 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
                 }
             }
             
-            }
-        )
+        }
+        )}
+    
+    
+
         
         /* Example of Yelp search with more search options specified
          Business.searchWithTerm("Restaurants", sort: .Distance, categories: ["asianfusion", "burgers"], deals: true) { (businesses: [Business]!, error: NSError!) -> Void in
@@ -50,7 +68,6 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
          }
          */
         
-    }
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -73,6 +90,29 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
         return cell;
     }
     
+    
+    // called when text changes (including clear)
+    
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        Business.searchWithTerm(term: searchBar.text!, completion: { (businesses: [Business]?, error: Error?) -> Void in
+            
+            self.businesses = businesses
+            self.tableView.reloadData()
+            if let businesses = businesses {
+                for business in businesses {
+                    print(business.name!)
+                    print(business.address!)
+                }
+            }
+            
+        }
+        )
+        
+    }
+    
+    
     /*
      // MARK: - Navigation
      
@@ -83,4 +123,5 @@ class BusinessesViewController: UIViewController, UITableViewDataSource, UITable
      }
      */
     
+
 }
